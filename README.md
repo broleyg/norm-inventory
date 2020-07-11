@@ -2,7 +2,7 @@
 
 Usage: convert.py -i <inventory CSV file name> -o <HTML file name>
 
-	-i	the name of the CSV inventory report.  if the filename has the prefix
+	-i	the name of the CSV inventory report.  if the filename has the prefix 
 		YYYYMMDDHHNN the program will use it as the date/time the CSV was created where:
 			YYYY is the four digit year
 			MM is the two digit month
@@ -14,6 +14,6 @@ Usage: convert.py -i <inventory CSV file name> -o <HTML file name>
 	-l	do NOT upload the HTML file
 	-h	prints out this message
 Examples:
-	convert.py -i 202004301400.csv -o inventory.html
+	python3 convert.py -i 202004301400.csv -o inventory.html
 
 
