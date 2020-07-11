@@ -4,11 +4,13 @@ import csv
 import json
 import datetime
 import pathlib
+from upload import Upload
 
 _DEFAULT_HTML_FILENAME = "inventory.html"
 _OPTION_HELP = '-h'
 _OPTION_INPUTFILE = '-i'
 _OPTION_OUTPUTFILE = '-o'
+_OPTION_DO_NOT_UPLOAD = '-l'
 
 _FIELD_MFG = 'manufacturer'
 _FIELD_STYLE = 'style'
@@ -164,9 +166,10 @@ def print_usage():
     print('\t\t\tNN is the two digit minute')
     print('\t\t\tFor example, April 28th 2020 at 2:45pm would be 202004281445')
     print('\t-o\tthe name of the HTML file the CSV will be converted to')
+    print('\t-l\tdo NOT upload the HTML file')
     print('\t-h\tprints out this message')
     print('Examples:')
-    print('\tconvert.py -i 202004301400_inventory.csv -o inventory.html')
+    print('\tconvert.py -i 202004301400.csv -o inventory.html')
     print('')
 
 def validate_filename(filename):
@@ -179,11 +182,12 @@ def main(argv):
     try:
         # See Python3 getopt class for details on the short option configuration string format
         # https://docs.python.org/3/library/getopt.html
-        short_options_config = _OPTION_HELP[1:] + _OPTION_INPUTFILE[1:] + ':' + _OPTION_OUTPUTFILE[1:] + ':'
+        short_options_config = _OPTION_HELP[1:] + _OPTION_INPUTFILE[1:] + ':' + _OPTION_OUTPUTFILE[1:] + ':' + _OPTION_DO_NOT_UPLOAD[1:]
         opts, args = getopt.getopt(argv, short_options_config)
 
         inventory_report_filename = ''
         inventory_report_html_filename =  _DEFAULT_HTML_FILENAME
+        upload_flag = True
 
         for opt, arg in opts:
             if opt == _OPTION_HELP:
@@ -193,10 +197,20 @@ def main(argv):
                 inventory_report_filename = validate_filename(arg)
             elif opt == _OPTION_OUTPUTFILE:
                 inventory_report_html_filename = validate_filename(arg)
+            elif opt == _OPTION_DO_NOT_UPLOAD:
+                upload_flag = False
 
         json_inventory = read_csv_report(inventory_report_filename)
         write_json_inventory('inventory.json', json_inventory)
         write_html_inventory(inventory_report_html_filename, json_inventory)
+
+        if upload_flag:
+            upload = Upload(server='normsbeerandwine.com', username='auto')
+            upload.filename = inventory_report_html_filename.name
+            upload.password = '3Gycw@58'
+            upload.connect()
+            upload.upload_file()
+            upload.disconnect()
 
     except Exception as e:
         print(e)
