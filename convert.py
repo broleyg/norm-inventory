@@ -169,7 +169,7 @@ def print_usage():
     print('\t-l\tdo NOT upload the HTML file')
     print('\t-h\tprints out this message')
     print('Examples:')
-    print('\tconvert.py -i 202004301400.csv -o inventory.html')
+    print('\tpython3 convert.py -i 202004301400.csv -o inventory.html')
     print('')
 
 def validate_filename(filename):
