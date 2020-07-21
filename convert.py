@@ -206,6 +206,7 @@ def main(argv):
 
         if upload_flag:
             upload = Upload(server='normsbeerandwine.com', username='auto')
+            upload.use_tls = False
             upload.filename = inventory_report_html_filename.name
             upload.password = '3Gycw@58'
             upload.connect()
