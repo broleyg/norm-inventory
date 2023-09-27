@@ -94,13 +94,19 @@ def extract_run_date(inventory_file):
 
 def validate_row(row):
     valid = True
+
+    if row[_FIELD_MFG] == 'BRAND' and row[_FIELD_STYLE] == 'DESCRIP':
+        return False
+
     for key, value in row.items():
         valid = valid and not(value == _CVS_MISSING)
+
     if not valid:
         print('line #' + row[_CVS_ROWNUM] + ' is missing fields')
     else:
         if _CVS_EXTRA in row:
             print('line #' + row[_CVS_ROWNUM] + ' had too many fields or one of the field values in the line contains a " character in the value')
+
     return valid
 
 
@@ -117,12 +123,15 @@ def keep_row(row):
 
     if keep_row:
         try:
-            quantity = int(row[_FIELD_QTY])
+            if row[_FIELD_QTY] == '':
+                quantity = 0
+            else:
+                quantity = int(row[_FIELD_QTY])
             keep_row = keep_row and quantity > 1
         except Exception as e:
-            print('line #1 quantity is not a valid number: ' + row[_FIELD_QTY])
-            return keep_row
-
+            print('line ' + row[_CVS_ROWNUM] + ' quantity ' + row[_FIELD_QTY] + 'is not a valid number: ' + row[_FIELD_QTY])
+            return False
+        
     return keep_row
 
 def new_item(row):
