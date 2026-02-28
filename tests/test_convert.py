@@ -150,10 +150,12 @@ def test_keep_row_excludes_empty_qty(monkeypatch):
     assert convert.keep_row(row) is False
 
 
-def test_keep_row_invalid_qty_returns_false(monkeypatch):
+def test_keep_row_invalid_qty_returns_false(monkeypatch, capsys):
     monkeypatch.setattr(convert, '_SIX_MONTHS_AGO', '20250101')
     row = make_row(qty='not-a-number')
     assert convert.keep_row(row) is False
+    captured = capsys.readouterr()
+    assert 'not a valid number' in captured.out
 
 
 # ---------------------------------------------------------------------------
