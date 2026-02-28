@@ -191,3 +191,59 @@ def test_write_json_inventory_valid_json(tmp_path):
     assert parsed['report_run_date'] == 'Wednesday March 12 2025 09:15AM'
     assert len(parsed['inventory']) == 1
     assert parsed['inventory'][0]['manufacturer'] == 'BUD LIGHT'
+
+
+# ---------------------------------------------------------------------------
+# write_html_inventory
+# ---------------------------------------------------------------------------
+
+def _make_inventory(items):
+    """Wrap a list of row dicts into the json_inventory structure."""
+    return {'report_run_date': 'Wednesday March 12 2025 09:15AM', 'inventory': items}
+
+
+def test_write_html_inventory_creates_file(tmp_path):
+    out = tmp_path / 'inventory.html'
+    convert.write_html_inventory(out, _make_inventory([make_row()]))
+    assert out.exists()
+
+
+def test_write_html_inventory_contains_category_heading(tmp_path):
+    out = tmp_path / 'inventory.html'
+    convert.write_html_inventory(out, _make_inventory([make_row(category='BEER-DOMESTIC')]))
+    html = out.read_text()
+    assert '<H1>BEER-DOMESTIC</H1>' in html
+
+
+def test_write_html_inventory_line_item_format(tmp_path):
+    out = tmp_path / 'inventory.html'
+    item = make_row(mfg='BUD LIGHT', style='LAGER CANS', size='24PK',
+                    price='25.9900', qty='5', category='BEER-DOMESTIC')
+    convert.write_html_inventory(out, _make_inventory([item]))
+    html = out.read_text()
+    assert 'BUD LIGHT LAGER CANS (24PK) $25.99 -- Qty: 5' in html
+
+
+def test_write_html_inventory_beer_before_spirits(tmp_path):
+    out = tmp_path / 'inventory.html'
+    items = [
+        make_row(mfg='TITO', style='VODKA', category='SPIRITS', size='1L',
+                 price='29.9900', qty='3'),
+        make_row(mfg='BUD LIGHT', style='LAGER', category='BEER-DOMESTIC',
+                 size='24PK', price='25.9900', qty='5'),
+    ]
+    convert.write_html_inventory(out, _make_inventory(items))
+    html = out.read_text()
+    assert html.index('BEER-DOMESTIC') < html.index('SPIRITS')
+
+
+def test_write_html_inventory_excludes_access_categories(tmp_path):
+    out = tmp_path / 'inventory.html'
+    items = [
+        make_row(mfg='MISC', style='CORKSCREW', category='ACCESS-GIFTS',
+                 size='EACH', price='4.9900', qty='10'),
+        make_row(),
+    ]
+    convert.write_html_inventory(out, _make_inventory(items))
+    html = out.read_text()
+    assert 'ACCESS-GIFTS' not in html
