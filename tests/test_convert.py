@@ -247,3 +247,40 @@ def test_write_html_inventory_excludes_access_categories(tmp_path):
     convert.write_html_inventory(out, _make_inventory(items))
     html = out.read_text()
     assert 'ACCESS-GIFTS' not in html
+
+
+# ---------------------------------------------------------------------------
+# read_csv_report
+# ---------------------------------------------------------------------------
+
+FIXTURE_CSV = pathlib.Path(__file__).parent / 'fixtures' / '202503120915.csv'
+
+
+def test_read_csv_report_raises_if_file_missing():
+    with pytest.raises(Exception):
+        convert.read_csv_report(pathlib.Path('nonexistent_file.csv'))
+
+
+def test_read_csv_report_returns_expected_structure(tmp_path, monkeypatch):
+    monkeypatch.setattr(convert, '_SIX_MONTHS_AGO', '20250101')
+    csv_file = tmp_path / '202503120915.csv'
+    csv_file.write_text(FIXTURE_CSV.read_text())
+
+    result = convert.read_csv_report(csv_file)
+
+    assert 'report_run_date' in result
+    assert 'inventory' in result
+    assert result['report_run_date'] == 'Wednesday March 12 2025 09:15AM'
+
+
+def test_read_csv_report_filters_correctly(tmp_path, monkeypatch):
+    monkeypatch.setattr(convert, '_SIX_MONTHS_AGO', '20250101')
+    csv_file = tmp_path / '202503120915.csv'
+    csv_file.write_text(FIXTURE_CSV.read_text())
+
+    result = convert.read_csv_report(csv_file)
+
+    # Only BUD LIGHT and COLUMBIA CREST should survive all filters
+    assert len(result['inventory']) == 2
+    manufacturers = {item['manufacturer'] for item in result['inventory']}
+    assert manufacturers == {'BUD LIGHT', 'COLUMBIA CREST'}
