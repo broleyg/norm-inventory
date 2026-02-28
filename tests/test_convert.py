@@ -154,3 +154,40 @@ def test_keep_row_invalid_qty_returns_false(monkeypatch):
     monkeypatch.setattr(convert, '_SIX_MONTHS_AGO', '20250101')
     row = make_row(qty='not-a-number')
     assert convert.keep_row(row) is False
+
+
+# ---------------------------------------------------------------------------
+# new_item
+# ---------------------------------------------------------------------------
+
+def test_new_item_returns_plain_dict():
+    from collections import OrderedDict
+    row = OrderedDict(make_row())
+    result = convert.new_item(row)
+    assert isinstance(result, dict)
+    assert result['manufacturer'] == 'BUD LIGHT'
+    assert result['quantity'] == '5'
+
+
+# ---------------------------------------------------------------------------
+# write_json_inventory
+# ---------------------------------------------------------------------------
+
+def test_write_json_inventory_creates_file(tmp_path):
+    out = tmp_path / 'inventory.json'
+    data = {'report_run_date': 'Today', 'inventory': [make_row()]}
+    convert.write_json_inventory(out, data)
+    assert out.exists()
+
+
+def test_write_json_inventory_valid_json(tmp_path):
+    out = tmp_path / 'inventory.json'
+    data = {
+        'report_run_date': 'Wednesday March 12 2025 09:15AM',
+        'inventory': [make_row()],
+    }
+    convert.write_json_inventory(out, data)
+    parsed = json.loads(out.read_text())
+    assert parsed['report_run_date'] == 'Wednesday March 12 2025 09:15AM'
+    assert len(parsed['inventory']) == 1
+    assert parsed['inventory'][0]['manufacturer'] == 'BUD LIGHT'
