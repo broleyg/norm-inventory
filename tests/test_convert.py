@@ -52,3 +52,30 @@ def test_extract_run_date_non_date_filename():
     p = pathlib.Path('inventory.csv')
     result = convert.extract_run_date(p)
     assert result == ''
+
+# ---------------------------------------------------------------------------
+# validate_row
+# ---------------------------------------------------------------------------
+
+def test_validate_row_valid():
+    row = make_row()
+    assert convert.validate_row(row) is True
+
+
+def test_validate_row_header_row():
+    row = make_row(mfg='BRAND', style='DESCRIP')
+    assert convert.validate_row(row) is False
+
+
+def test_validate_row_missing_field():
+    row = make_row(price='## MISSING FIELD ##')
+    assert convert.validate_row(row) is False
+
+
+def test_validate_row_extraneous_field_still_valid(capsys):
+    row = make_row()
+    row['extraneous'] = ['extra_value']
+    result = convert.validate_row(row)
+    assert result is True
+    captured = capsys.readouterr()
+    assert 'too many fields' in captured.out
